@@ -6,5 +6,42 @@ date: "2024-11-11"
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
+## Problem 1
+Not graded
+
+```{r birthday}
+```
+
+## Problem 2
+```{r power}
+a = rnorm(30, mean = 0, sd = 5)
+
+a_hat = mean(a)
+
+#function will be one sample t-test formula
+
+t_test = function(x) {
+  
+  t.test(a)
+  
+}
+
+t_test(a)
+
+output = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  output[[i]] = t_test(a)
+}
+
+#need to figure out how to display the data, but the above code works. 
+
+```
+
+
+
+
+## Problem 3
