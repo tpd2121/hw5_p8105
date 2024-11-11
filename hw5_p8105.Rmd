@@ -1,0 +1,10 @@
+---
+title: "hw5_p8105"
+output: github_document
+date: "2024-11-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
