@@ -7,6 +7,7 @@ date: "2024-11-11"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+set.seed(1)
 ```
 
 ## Problem 1
@@ -19,22 +20,20 @@ Not graded
 ```{r power}
 a = rnorm(30, mean = 0, sd = 5)
 
-a_hat = mean(a)
-
 #function will be one sample t-test formula
 
-t_test = function(x) {
+ttest = function(x) {
   
-  t.test(a)
+  (mean(a) - 0) / (5 / sqrt(30))
   
 }
 
-t_test(a)
+ttest(a)
 
 output = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output[[i]] = t_test(a)
+  output[[i]] = ttest(a)
 }
 
 #need to figure out how to display the data, but the above code works. 
