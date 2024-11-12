@@ -7,6 +7,8 @@ date: "2024-11-11"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+install.packages("tidymodels")
+library(broom)
 set.seed(1)
 ```
 
@@ -20,23 +22,18 @@ Not graded
 ```{r power}
 a = rnorm(30, mean = 0, sd = 5)
 
-#function will be one sample t-test formula
-
-ttest = function(x) {
-  
-  (mean(a) - 0) / (5 / sqrt(30))
-  
+a_sample = function(a) {
+  a = rnorm(30, mean = 0, sd = 5)
+  t.test(a)
 }
-
-ttest(a)
 
 output = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output[[i]] = ttest(a)
+  output[[i]] = a_sample()
 }
 
-#need to figure out how to display the data, but the above code works. 
+#need to figure out the broom tidy thing
 
 ```
 
