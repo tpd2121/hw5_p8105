@@ -7,7 +7,6 @@ date: "2024-11-11"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-install.packages("tidymodels")
 library(broom)
 set.seed(1)
 ```
@@ -20,30 +19,29 @@ Not graded
 
 ## Problem 2
 ```{r power}
-a = rnorm(30, mean = 0, sd = 5)
+#test df
+df1 = tibble(
+  x = rnorm(30, mean = 0, sd = 5))
 
+#function
 a_sample = function(a) {
-  a = rnorm(30, mean = 0, sd = 5)
-  t.test(a)
+  a_data = tibble(
+    a = rnorm(30, mean = 0, sd = 5))
+  a_result = t.test(a_data)
 }
 
+#writing loop
 output = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output[[i]] = a_sample()
+  output[[i]] = tidy(a_sample())
 }
 
-#need to figure out the broom tidy thing
+df3 = bind_rows(output)
 
-#if i put tidy immediately to the result for a t-test, it will work
-tidy(t.test(a))
 
-#but it doesn't work if i do tidy for the t-test in a function
 
-#if i pull the list individually, it works
-tidy(output[[1]])
 
-a_result = bind_rows(output)
 
 ```
 
