@@ -23,7 +23,8 @@ Not graded
 df1 = tibble(
   x = rnorm(30, mean = 0, sd = 5))
 
-#function
+#function: the dataset is part of the function because it's needed for repeated sampling
+#the function is t.test directly
 a_sample = function(a) {
   a_data = tibble(
     a = rnorm(30, mean = 0, sd = 5))
@@ -31,14 +32,36 @@ a_sample = function(a) {
 }
 
 #writing loop
+#use tidy as part of the output immediately to create a tibble
 output = vector("list", length = 5000)
 
 for (i in 1:5000) {
   output[[i]] = tidy(a_sample())
 }
 
+#tidy dataframe result
 df3 = bind_rows(output)
 
+#repeat the above for mean = 1-6
+#mean = 1
+output2 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  output2[[i]] = tidy(a_sample(a(mean = 1)))
+}
+
+df4 = bind_rows(output2)
+
+#mean = 2
+output3 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  output3[[i]] = tidy(a_sample(a(mean = 2)))
+}
+
+df5 = bind_rows(output3)
+
+#How to include # of iterations and input mean in the tibble? 
 
 
 
