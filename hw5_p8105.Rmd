@@ -23,6 +23,18 @@ Not graded
 df1 = tibble(
   x = rnorm(30, mean = 0, sd = 5))
 
+means = seq(0, 6, by = 1)
+
+#test function
+
+df_sample = function(df) {
+  data_1 = tibble(
+    x = rnorm(30, mean = means[i], sd = 5))
+  data_result = t.test(data_1)
+}
+
+
+
 #function: the dataset is part of the function because it's needed for repeated sampling
 #the function is t.test directly
 a_sample = function(a) {
@@ -33,33 +45,69 @@ a_sample = function(a) {
 
 #writing loop
 #use tidy as part of the output immediately to create a tibble
-output = vector("list", length = 5000)
+mean_0 = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output[[i]] = tidy(a_sample())
+  mean_0[[i]] = tidy(a_sample())
 }
 
 #tidy dataframe result
-df3 = bind_rows(output)
+result0 = bind_rows(mean_0)
 
 #repeat the above for mean = 1-6
 #mean = 1
-output2 = vector("list", length = 5000)
+mean_1 = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output2[[i]] = tidy(a_sample(a(mean = 1)))
+  mean_1[[i]] = tidy(a_sample(a(mean = 1)))
 }
 
-df4 = bind_rows(output2)
+result1 = bind_rows(mean_1)
 
 #mean = 2
-output3 = vector("list", length = 5000)
+mean_2 = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  output3[[i]] = tidy(a_sample(a(mean = 2)))
+  mean_2[[i]] = tidy(a_sample(a(mean = 2)))
 }
 
-df5 = bind_rows(output3)
+result2 = bind_rows(mean_2)
+
+#mean = 3
+mean_3 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  mean_3[[i]] = tidy(a_sample(a(mean = 3)))
+}
+
+result3 = bind_rows(mean_3)
+
+#mean = 4
+mean_4 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  mean_4[[i]] = tidy(a_sample(a(mean = 4)))
+}
+
+result4 = bind_rows(mean_4)
+
+#mean = 5
+mean_5 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  mean_5[[i]] = tidy(a_sample(a(mean = 5)))
+}
+
+result5 = bind_rows(mean_5)
+
+#mean = 6
+mean_6 = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  mean_6[[i]] = tidy(a_sample(a(mean = 6)))
+}
+
+result6 = bind_rows(mean_6)
 
 #How to include # of iterations and input mean in the tibble? 
 
