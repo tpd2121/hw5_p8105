@@ -221,6 +221,17 @@ homicide %>%
   
 ```
 
+merged homicide 2 and 3
+
+```{r hom test}
+homicide %>% 
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state) %>%
+  summarize(
+    total = n(), 
+    unsolved = sum(disposition != "Closed by arrest"))
+```
+
 For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
 ```{r homicide4}
 #prop test for baltimore. x = unsolved, n = total homicide, the rest use default setting
@@ -231,15 +242,27 @@ md_result = tidy(prop.test(1825, 2827)) %>%
 Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 ```{r homicide5}
 #now need to make a loop for function in homicide4 to look at all city state
-#need to join homicide2 (total) and homicide3 (unsolved) 
-
-#OR
-
-#the function needs to summarize total for each citystate, the count the unsolved one
 
 #the function needs to be able to sample from the df, specifying each city state, x = unsolved, x = total homicide
+#to sample by row, use rowwise() code
 
 #where does citystate will be included in the prop.test function?
+
+hom_result = homicide %>% 
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state) %>%
+  summarize(
+    total = n(), 
+    unsolved = sum(disposition != "Closed by arrest")) %>% 
+  rowwise() %>%
+  mutate(
+    test_result = list(prop.test(x = unsolved, n = total)),
+    p_value = test_result$p.value,
+    estimate = test_result$estimate,
+    conf_low = test_result$conf.int[1],
+    conf_high = test_result$conf.int[2]
+  ) %>%
+  unnest(c(p_value, estimate, conf_low, conf_high))
 
 ```
 
