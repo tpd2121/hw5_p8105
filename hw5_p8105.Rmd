@@ -8,6 +8,7 @@ date: "2024-11-11"
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(broom)
+library(ggridges)
 set.seed(1)
 ```
 
@@ -148,7 +149,7 @@ masterdf =
 plot1 = masterdf %>% 
   filter(p.value < 0.05) %>% 
   count(mean) %>% 
-  mutate(proportion = n/5000)
+  mutate(proportion = n/5000) 
 
 #ggplot weirdly convert my df into list if i pipe directly, so i need to use the print function to display the plot. that's why i don't use piping. 
 ggplot(plot1, aes(x = mean, y = proportion)) +
@@ -195,7 +196,54 @@ comp_plot = full_join(plot2, plot3)
 
 ## Problem 3
 ```{r homicide}
+#export the data
+homicide = read.csv("./data/homicide-data.csv")
+```
 
+Describe the raw data: The data contains `r nrow(homicide)` observations. The variables are `r names(homicide)`, which includes date of the crime (in YYYYMMDD format), victim's name and demographics, location of homicide, and the outcome of the investigation. 
+
+Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+```{r homicide2}
+homicide %>% 
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state) %>% 
+  summarize(count = n())
+```
+
+*Am I supposed to merge homicide2 and homicide3? 
+
+```{r homicide3}
+homicide %>% 
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state, disposition) %>% 
+  filter(disposition != "Closed by arrest") %>% 
+  summarize(count = n())
+  
+```
+
+For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+```{r homicide4}
+#prop test for baltimore. x = unsolved, n = total homicide, the rest use default setting
+md_result = tidy(prop.test(1825, 2827)) %>% 
+  mutate(city_state = "baltimore_md")
+```
+
+Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
+```{r homicide5}
+#now need to make a loop for function in homicide4 to look at all city state
+#need to join homicide2 (total) and homicide3 (unsolved) 
+
+#OR
+
+#the function needs to summarize total for each citystate, the count the unsolved one
+
+#the function needs to be able to sample from the df, specifying each city state, x = unsolved, x = total homicide
+
+#where does citystate will be included in the prop.test function?
 
 ```
+
+
+Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides
+
 
