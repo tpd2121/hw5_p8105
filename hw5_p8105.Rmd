@@ -12,36 +12,12 @@ library(ggridges)
 set.seed(1)
 ```
 
-## Problem 1
-Not graded
-
-```{r birthday}
-```
-
 ## Problem 2
 ```{r power}
-#test df
-df1 = tibble(
-  x = rnorm(30, mean = 0, sd = 5))
 
-means = seq(0, 6, by = 1)
-
-#test function
-#need to add the return so the console display the result
-
-df_sample = function(n, mean, sd) {
-  data_1 = tibble(
-    x = rnorm(n, mean, sd))
-  data_result = t.test(data_1)
-  
-  return(data_result)
-}
-
-#you can run the function with the exact same n and sd and only change the mean
-df_sample(30, 0, 5)
-df_sample(30, 1, 5)
-
-
+#mu_values = 0:6
+#for i in 1:length(mu_mean)
+#define the length in the function not in the loop
 
 #function: the dataset is part of the function because it's needed for repeated sampling
 #the function is t.test directly
@@ -160,6 +136,8 @@ ggplot(plot1, aes(x = mean, y = proportion)) +
 #This means that the effect size in majority of the simulations is small
 #Because it's small, the power is small
 
+#as you increase your mean, the difference with the sample mean is getting bigger. so the effect size is getting bigger too, and as effect size increase, the power increase. 
+
 
 #plot 2
 plot2 = masterdf %>% 
@@ -243,7 +221,7 @@ Now run prop.test for each of the cities in your dataset, and extract both the p
 ```{r homicide5}
 #now need to make a loop for function in homicide4 to look at all city state
 
-#the function needs to be able to sample from the df, specifying each city state, x = unsolved, x = total homicide
+#the function needs to be able to sample from the df, specifying each city state, x = unsolved, n = total homicide
 #to sample by row, use rowwise() code
 
 #where does citystate will be included in the prop.test function?
@@ -253,7 +231,7 @@ hom_result = homicide %>%
   group_by(city_state) %>%
   summarize(
     total = n(), 
-    unsolved = sum(disposition != "Closed by arrest")) %>% 
+    unsolved = sum(disposition != "Closed by arrest")) %>%
   rowwise() %>%
   mutate(
     test_result = list(prop.test(x = unsolved, n = total)),
@@ -264,6 +242,35 @@ hom_result = homicide %>%
   ) %>%
   unnest(c(p_value, estimate, conf_low, conf_high))
 
+#he wants to use purr so need to make a loop (which is???)
+
+#write the function
+homicide_loop = function(u) {
+  hom_result = homicide %>% 
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state) %>%
+  summarize(
+    total = n(), 
+    unsolved = sum(disposition != "Closed by arrest"))
+}
+
+hom_result2 = homicide %>%
+  unite(city_state, c(city, state), sep = ", ") %>% 
+  group_by(city_state) %>%
+  summarize(
+    total = n(), 
+    unsolved = sum(disposition != "Closed by arrest")) %>% 
+  map(hom_result2, prop.test(x = hom_result2$unsolved, n = hom_result2$total)) %>% 
+  unnest(c(p_value, estimate, conf_low, conf_high))
+
+# Extract the p-value, estimate, and confidence interval from the prop.test results
+df <- df %>%
+  mutate(
+    p_value = map_dbl(test_result, ~ .x$p.value),
+    estimate = map_dbl(test_result, ~ .x$estimate),
+    conf_low = map_dbl(test_result, ~ .x$conf.int[1]),
+    conf_high = map_dbl(test_result, ~ .x$conf.int[2])
+  )
 ```
 
 
