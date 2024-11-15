@@ -13,18 +13,24 @@ set.seed(1)
 ```
 
 ## Problem 2
-```{r power}
+
+2A. Design the elements
+```{r elements}
 
 #mu_values = 0:6
 #for i in 1:length(mu_mean)
 #define the length in the function not in the loop
 
-#function: the dataset is part of the function because it's needed for repeated sampling
-#the function is t.test directly
-a_sample = function(a) {
-  a_data = tibble(
-    a = rnorm(30, mean = 0, sd = 5))
-  a_result = t.test(a_data)
+#n = 30
+#SD = 5
+#mean = 0:6
+#a = rnorm(30, mean = 0, sd = 5)
+#include a in the function so it become repeated sampling, the function use t.test directly
+
+ttest = function(x) {
+  df1 = tibble(
+    x = rnorm(30, mean = 0, sd = 5))
+  ttest_result = t.test(df1)
 }
 
 #writing loop
@@ -32,15 +38,48 @@ a_sample = function(a) {
 mean_0 = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  mean_0[[i]] = tidy(a_sample())
+  mean_0[[i]] = broom::tidy(ttest())
 }
 
 #tidy dataframe result
-result0 = bind_rows(mean_0) %>% 
-  mutate(mean = "0") %>% 
-  select(mean, estimate, p.value)
+result0 = bind_rows(mean_0)
 
-#repeat the above for mean = 1-6
+```
+
+Option 2: use map
+```{r elements2}
+sampling = function(y) {
+  y = rnorm(30, mean = 0, sd = 5)
+}
+
+test_res = 
+  expand_grid(
+    iter = 1:10
+  ) %>% 
+  mutate(result1 = map(iter, sampling(y))) %>% 
+  broom::tidy(ttest_result[[1]])
+```
+
+2B. Loop for mean 1-6
+```{r loop 1-6}
+#repeat the above for mean = 1-6, use map is easier
+mean_res = 
+  expand_grid(
+    true_mean = c(0, 1, 2, 3, 4, 5, 6),
+    iter = 1:5000
+  ) %>% 
+  mutate(ttest_result = map(true_mean, ~ttest())) %>% 
+  broom::tidy(ttest_result[[1]])
+
+#getting the data
+#can't get the data. to use unnest, data cannot be a list
+result16 = bind_rows(mean_res)
+  
+  broom::tidy(ttest_result)
+  unnest(ttest_result)
+
+
+
 #mean = 1
 mean_1 = vector("list", length = 5000)
 
@@ -109,7 +148,10 @@ result6 = bind_rows(mean_6)  %>%
 
 #How to include # of iterations and input mean in the tibble? mutate
 #technically the df making (bind rows, mutate, and select) part can be included in a loop
+```
 
+2C. Make plot for effect size
+```{r effect size}
 #write a function to make the plot
 
 #1st plot: Y = proportion of null rejected (p<0.05); x = the mean
@@ -135,6 +177,10 @@ ggplot(plot1, aes(x = mean, y = proportion)) +
 #In this simulation, out of 5000 only around ~250ish of all mean rejected the null hypothesis.
 #This means that the effect size in majority of the simulations is small
 #Because it's small, the power is small
+```
+
+2D. Make plot for mu hat true mu
+```{r mu}
 
 #as you increase your mean, the difference with the sample mean is getting bigger. so the effect size is getting bigger too, and as effect size increase, the power increase. 
 
@@ -171,6 +217,8 @@ comp_plot = full_join(plot2, plot3)
 #no. actually the data from mu_hat_2 has the closer value to the true mean compared to the filtered one. this is because they have bigger sample size (5000 vs 250 ish)
 
 ```
+
+
 
 ## Problem 3
 ```{r homicide}
