@@ -135,36 +135,20 @@ ggplot(plot3, aes(x = true_mean, y = mu_hat_2f)) +
 Again, the plot is weird because something is wrong, but theoretically, the average of mu hat from null is rejected should not be the same to the true value of the mean because the null rejected, meaning mu != mu hat. 
 
 ## Problem 3
+
+**3A**
 ```{r homicide}
 #export the data
 homicide = read.csv("./data/homicide-data.csv")
 ```
 
-Describe the raw data: The data contains `r nrow(homicide)` observations. The variables are `r names(homicide)`, which includes date of the crime (in YYYYMMDD format), victim's name and demographics, location of homicide, and the outcome of the investigation. 
+**Describe the raw data** 
+The data contains `r nrow(homicide)` observations. The variables are `r names(homicide)`, which includes date of the crime (in YYYYMMDD format), victim's name and demographics, location of homicide, and the outcome of the investigation. 
 
 Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
-```{r homicide2}
-homicide %>% 
-  unite(city_state, c(city, state), sep = ", ") %>% 
-  group_by(city_state) %>% 
-  summarize(count = n())
-```
-
-*Am I supposed to merge homicide2 and homicide3? 
-
-```{r homicide3}
-homicide %>% 
-  unite(city_state, c(city, state), sep = ", ") %>% 
-  group_by(city_state, disposition) %>% 
-  filter(disposition != "Closed by arrest") %>% 
-  summarize(count = n())
-  
-```
-
-merged homicide 2 and 3
 
 ```{r hom test}
-homicide %>% 
+homicide_clean = homicide %>% 
   unite(city_state, c(city, state), sep = ", ") %>% 
   group_by(city_state) %>%
   summarize(
@@ -172,22 +156,33 @@ homicide %>%
     unsolved = sum(disposition != "Closed by arrest"))
 ```
 
+**3B.** 
 For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
-```{r homicide4}
+```{r homicide_md}
 #prop test for baltimore. x = unsolved, n = total homicide, the rest use default setting
-md_result = tidy(prop.test(1825, 2827)) %>% 
-  mutate(city_state = "baltimore_md")
+homicide_clean %>% 
+  filter(city_state == "Baltimore, MD") %>% 
+  mutate(
+    prop_test_result = map(city_state, ~ prop.test(x = unsolved, n = total))
+    ) %>% 
+  unnest(prop_test_result)
+    
+#the code works, but can't extract the prop_test_result --> unnest and tidy doesn't work
 ```
 
+**3C**
 Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 ```{r homicide5}
-#now need to make a loop for function in homicide4 to look at all city state
+homicide_clean %>% 
+  mutate(
+    prop_test_result = map(city_state, ~ prop.test(x = unsolved, n = total))
+    )
 
-#the function needs to be able to sample from the df, specifying each city state, x = unsolved, n = total homicide
-#to sample by row, use rowwise() code
+#how to extract?
 
-#where does citystate will be included in the prop.test function?
+#------
 
+#previous code
 hom_result = homicide %>% 
   unite(city_state, c(city, state), sep = ", ") %>% 
   group_by(city_state) %>%
@@ -235,7 +230,11 @@ df <- df %>%
   )
 ```
 
-
 Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides
+
+```{r plot homicide}
+
+```
+
 
 
