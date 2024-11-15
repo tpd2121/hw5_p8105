@@ -29,8 +29,9 @@ set.seed(1)
 
 ttest = function(x) {
   df1 = tibble(
-    x = rnorm(30, mean = 0, sd = 5))
+    x = rnorm(30, mean = x, sd = 5))
   ttest_result = t.test(df1)
+  broom::tidy(ttest_result)
 }
 
 #writing loop
@@ -38,7 +39,7 @@ ttest = function(x) {
 mean_0 = vector("list", length = 5000)
 
 for (i in 1:5000) {
-  mean_0[[i]] = broom::tidy(ttest())
+  mean_0[[i]] = ttest(0)
 }
 
 #tidy dataframe result
@@ -48,13 +49,13 @@ result0 = bind_rows(mean_0)
 
 Option 2: use map
 ```{r elements2}
-sampling = function(y) {
-  y = rnorm(30, mean = 0, sd = 5)
-}
+y = rnorm(30, mean = 0, sd = 5)
+true_mean = c(0, 1)
 
 test_res = 
   expand_grid(
-    iter = 1:10
+    iter = 1:5,
+    y = rnorm(30, mean = true_mean, sd = 5)
   ) %>% 
   mutate(result1 = map(iter, sampling(y))) %>% 
   broom::tidy(ttest_result[[1]])
@@ -63,21 +64,14 @@ test_res =
 2B. Loop for mean 1-6
 ```{r loop 1-6}
 #repeat the above for mean = 1-6, use map is easier
+#y should not be part of the expand_grid. we shouldn't have 30 rows, we should have 5000 rows of random sampling containing 30 numbers.
 mean_res = 
   expand_grid(
     true_mean = c(0, 1, 2, 3, 4, 5, 6),
-    iter = 1:5000
+    iter = 1:10
   ) %>% 
-  mutate(ttest_result = map(true_mean, ~ttest())) %>% 
-  broom::tidy(ttest_result[[1]])
-
-#getting the data
-#can't get the data. to use unnest, data cannot be a list
-result16 = bind_rows(mean_res)
-  
-  broom::tidy(ttest_result)
+  mutate(ttest_result = map(true_mean, ~ttest(true_mean))) %>% 
   unnest(ttest_result)
-
 
 
 #mean = 1
