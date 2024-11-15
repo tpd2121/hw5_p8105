@@ -14,7 +14,7 @@ set.seed(1)
 
 ## Problem 2
 
-2A. Design the elements
+**2A. Design the elements**
 ```{r elements}
 
 #mu_values = 0:6
@@ -61,158 +61,78 @@ test_res =
   broom::tidy(ttest_result[[1]])
 ```
 
-2B. Loop for mean 1-6
+**2B. Loop for mean 1-6**
 ```{r loop 1-6}
 #repeat the above for mean = 1-6, use map is easier
 #y should not be part of the expand_grid. we shouldn't have 30 rows, we should have 5000 rows of random sampling containing 30 numbers.
 mean_res = 
   expand_grid(
     true_mean = c(0, 1, 2, 3, 4, 5, 6),
-    iter = 1:10
+    iter = 1:5000
   ) %>% 
   mutate(ttest_result = map(true_mean, ~ttest(true_mean))) %>% 
   unnest(ttest_result)
-
-
-#mean = 1
-mean_1 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_1[[i]] = tidy(a_sample(a(mean = 1)))
-}
-
-result1 = bind_rows(mean_1) %>% 
-  mutate(mean = "1") %>% 
-  select(mean, estimate, p.value)
-
-#mean = 2
-mean_2 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_2[[i]] = tidy(a_sample(a(mean = 2)))
-}
-
-result2 = bind_rows(mean_2) %>% 
-  mutate(mean = "2") %>% 
-  select(mean, estimate, p.value)
-
-#mean = 3
-mean_3 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_3[[i]] = tidy(a_sample(a(mean = 3)))
-}
-
-result3 = bind_rows(mean_3)  %>% 
-  mutate(mean = "3") %>% 
-  select(mean, estimate, p.value)
-
-#mean = 4
-mean_4 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_4[[i]] = tidy(a_sample(a(mean = 4)))
-}
-
-result4 = bind_rows(mean_4) %>% 
-  mutate(mean = "4") %>% 
-  select(mean, estimate, p.value)
-
-#mean = 5
-mean_5 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_5[[i]] = tidy(a_sample(a(mean = 5)))
-}
-
-result5 = bind_rows(mean_5)  %>% 
-  mutate(mean = "5") %>% 
-  select(mean, estimate, p.value)
-
-#mean = 6
-mean_6 = vector("list", length = 5000)
-
-for (i in 1:5000) {
-  mean_6[[i]] = tidy(a_sample(a(mean = 6)))
-}
-
-result6 = bind_rows(mean_6)  %>% 
-  mutate(mean = "6") %>% 
-  select(mean, estimate, p.value)
-
-#How to include # of iterations and input mean in the tibble? mutate
-#technically the df making (bind rows, mutate, and select) part can be included in a loop
 ```
 
-2C. Make plot for effect size
+**2C. Make plot for effect size**
 ```{r effect size}
-#write a function to make the plot
+mean_res %>% 
+  mutate(
+    estimate = as.numeric(estimate)
+  ) %>% 
+  select(true_mean, iter, estimate, p.value) %>% 
+  group_by(true_mean) %>% 
+  mutate(reject_null = p.value < 0.05) %>% 
+  summarize(power = mean(reject_null)) %>% 
+  ggplot(aes(x = true_mean, y = power)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
 
-#1st plot: Y = proportion of null rejected (p<0.05); x = the mean
-#do i bind rows then filter, OR filter first then bind rows?
-
-#bind rows first (make a master df)
-
-masterdf = 
-  bind_rows(result0, result1, result2, result3, result4, result5, result6) %>% 
-  mutate(mean = as.numeric(mean))
-
-#plot1
-plot1 = masterdf %>% 
+#this is what i used earlier in lieu of reject null and power. result is similar
   filter(p.value < 0.05) %>% 
-  count(mean) %>% 
-  mutate(proportion = n/5000) 
+  summarize(count = n()) %>% 
+  mutate(proportion = count/10) %>% 
+  ggplot(aes(x = true_mean, y = proportion)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
 
-#ggplot weirdly convert my df into list if i pipe directly, so i need to use the print function to display the plot. that's why i don't use piping. 
-ggplot(plot1, aes(x = mean, y = proportion)) +
-  geom_point()
-
-#describe the association between effect size and power
-#In this simulation, out of 5000 only around ~250ish of all mean rejected the null hypothesis.
-#This means that the effect size in majority of the simulations is small
-#Because it's small, the power is small
+#the code works, but the graph is weird bc the statistics is wrong
 ```
 
-2D. Make plot for mu hat true mu
+**Describe the association between effect size and power**
+
+Something is wrong with the statistics code, which I don't know why because I'm not good with statistics. But in general, as the hypothesized true population mean increased, so does the difference with the sample mean. As effect size increase, power will also increase as we can detect difference and thus reject the null. 
+
+**2D. Make plot for mu hat true mu**
 ```{r mu}
-
-#as you increase your mean, the difference with the sample mean is getting bigger. so the effect size is getting bigger too, and as effect size increase, the power increase. 
-
-
 #plot 2
-plot2 = masterdf %>% 
-  group_by(mean) %>% 
+plot2 = mean_res %>% 
+  group_by(true_mean) %>% 
   summarize(mean(estimate)) %>% 
-  rename(mu_hat_2 = `mean(estimate)`)
+  rename(mu_hat_2 = `mean(estimate)`) 
 
-ggplot(plot2, aes(x = mean, y = mu_hat_2)) +
+ggplot(plot2, aes(x = true_mean, y = mu_hat_2)) +
   geom_point() +
   geom_smooth(se = FALSE)
 
 #plot 3
-plot3 = masterdf %>% 
+plot3 = mean_res %>% 
   filter(p.value < 0.05) %>% 
-  group_by(mean) %>% 
+  group_by(true_mean) %>% 
   summarize(mean(estimate)) %>% 
   rename(mu_hat_2f = `mean(estimate)`)
 
-ggplot(plot3, aes(x = mean, y = mu_hat_2f)) +
+ggplot(plot3, aes(x = true_mean, y = mu_hat_2f)) +
   geom_point() +
   geom_smooth(se = FALSE)
-
-#the plot feels weird because there are - values. should i specify the data to be + only?
-
-#how to overlap plot?
-
-#-----
-comp_plot = full_join(plot2, plot3)
 
 #is the sample average of mu hat across tests for which the null is rejected approximately equal to the true value of mean? why or why not? 
 #no. actually the data from mu_hat_2 has the closer value to the true mean compared to the filtered one. this is because they have bigger sample size (5000 vs 250 ish)
 
 ```
 
-
+**Is the sample average of mu hat across tests for which the null is rejected approximately equal to the true value of mean? why or why not?**
+Again, the plot is weird because something is wrong, but theoretically, the average of mu hat from null is rejected should not be the same to the true value of the mean because the null rejected, meaning mu != mu hat. 
 
 ## Problem 3
 ```{r homicide}
