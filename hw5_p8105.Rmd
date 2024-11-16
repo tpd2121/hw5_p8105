@@ -27,10 +27,10 @@ set.seed(1)
 #a = rnorm(30, mean = 0, sd = 5)
 #include a in the function so it become repeated sampling, the function use t.test directly
 
-ttest = function(n, mean, sd) {
+ttest = function(n = 30, mean, sd = 5) {
   df1 = tibble(
-    x = rnorm(n = 30, mean, sd = 5))
-  ttest_result = t.test(df1)
+    x = rnorm(n = n, mean, sd = sd))
+  ttest_result = t.test(x ~1, df1)
   broom::tidy(ttest_result)
 }
 
@@ -43,8 +43,8 @@ for (i in 1:5000) {
 }
 
 #tidy dataframe result
-result0 = bind_rows(mean_0)
-
+result0 = bind_rows(mean_0) %>% 
+  print()
 ```
 
 **2B. Loop for mean 1-6**
@@ -56,8 +56,9 @@ mean_res =
     true_mean = c(0, 1, 2, 3, 4, 5, 6),
     iter = 1:5000
   ) %>% 
-  mutate(ttest_result = map(true_mean, ~ttest(mean = true_mean))) %>% 
-  unnest(ttest_result)
+  mutate(ttest_result = map(true_mean, ~ttest(mean = .x))) %>% 
+  unnest(ttest_result) %>% 
+  print()
 ```
 
 **2C. Make plot for effect size**
@@ -73,13 +74,11 @@ mean_res %>%
   ggplot(aes(x = true_mean, y = power)) +
   geom_point() +
   geom_smooth(se = FALSE)
-
-#the code works, but the graph is weird bc the statistics is wrong
 ```
 
 **Describe the association between effect size and power**
 
-Something is wrong with the statistics code, which I don't know why because I'm not good with statistics. But in general, as the hypothesized true population mean increased, so does the difference with the sample mean. As effect size increase, power will also increase as we can detect difference and thus reject the null. 
+As the hypothesized true population mean increased, so does the difference with the sample mean. As effect size increase, power will also increase as we can detect difference and thus reject the null. 
 
 **2D. Make plot for mu hat true mu**
 ```{r mu}
@@ -107,7 +106,7 @@ ggplot(plot3, aes(x = true_mean, y = mu_hat_2f)) +
 ```
 
 **Is the sample average of mu hat across tests for which the null is rejected approximately equal to the true value of mean? why or why not?**
-Again, the plot is weird because something is wrong, but theoretically, the average of mu hat from null is rejected should not be the same to the true value of the mean because the null rejected, meaning mu != mu hat. 
+No, as we see the line is not really linear. This is because when the null is rejected, it means mu != mu hat so they should be different.  
 
 ## Problem 3
 
@@ -128,13 +127,14 @@ homicide_clean = homicide %>%
   group_by(city_state) %>%
   summarize(
     total = n(), 
-    unsolved = sum(disposition != "Closed by arrest"))
+    unsolved = sum(disposition != "Closed by arrest")) %>% 
+  print()
 ```
 
 Total number of homicides and unsolved homicides across all city states are `r sum(pull(homicide_clean, total))` and `r sum(pull(homicide_clean, unsolved))`, respectively. 
 
-**3B.** 
-For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+**3B. Prop test for Baltimore** 
+
 ```{r homicide_md}
 library(broom)
 
@@ -147,13 +147,13 @@ homicide_clean %>%
   mutate(
     tidy_result = map(prop_test_result, broom::tidy)
   ) %>% 
-  unnest(tidy_result)
+  unnest(tidy_result) %>% 
+  select(city_state, estimate, conf.low, conf.high) %>% 
+  print()
 ```
 
-The estimated proportion for unsolved cases are --- with confidence interval between ---
+**3C. Prop test for all**
 
-**3C**
-Now run prop.test for each of the cities in your dataset, and extract both the proportion of unsolved homicides and the confidence interval for each. Do this within a “tidy” pipeline, making use of purrr::map, purrr::map2, list columns and unnest as necessary to create a tidy dataframe with estimated proportions and CIs for each city.
 ```{r homicide5}
 homicide_plot = homicide_clean %>% 
   mutate(
@@ -162,11 +162,12 @@ homicide_plot = homicide_clean %>%
   mutate(
     tidy_result = map(prop_test_result, broom::tidy)
   ) %>% 
-  unnest(tidy_result)
+  unnest(tidy_result) %>% 
+  print()
 
 ```
 
-Create a plot that shows the estimates and CIs for each city – check out geom_errorbar for a way to add error bars based on the upper and lower limits. Organize cities according to the proportion of unsolved homicides
+**3D. Homicide plotting** 
 
 ```{r plot homicide}
 homicide_plot %>% 
@@ -177,7 +178,7 @@ homicide_plot %>%
   geom_point() +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust  =1))
+  theme(axis.text.x = element_text(angle = 90, hjust  =1))
 ```
 
 
